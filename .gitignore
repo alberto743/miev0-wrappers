@@ -1,1 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Alberto P
+#
+# SPDX-License-Identifier: CC0-1.0
+
 build/
+build-cmake/
+*.egg-info/
+venv/

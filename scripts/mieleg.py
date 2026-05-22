@@ -37,10 +37,10 @@ def compute_mie_scattering(executable, m_real, m_img, radius, wavelength):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--executable", default=Path(__file__).parent / "miescat")
-    parser.add_argument("--m_real", type=float)
-    parser.add_argument("--m_img", type=float)
-    parser.add_argument("--radius", type=float)
-    parser.add_argument("--wavelength", type=float)
+    parser.add_argument("--m_real", type=float, required=True)
+    parser.add_argument("--m_img", type=float, required=True)
+    parser.add_argument("--radius", type=float, required=True)
+    parser.add_argument("--wavelength", type=float, required=True)
 
     args = parser.parse_args()
 
