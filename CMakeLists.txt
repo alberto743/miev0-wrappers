@@ -2,42 +2,33 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-cmake_minimum_required(VERSION 3.10)
-project(mie_code
-    LANGUAGES Fortran
-)
+cmake_minimum_required(VERSION 3.16)
+project(mie_code LANGUAGES CXX Fortran)
 
 find_package(Python REQUIRED COMPONENTS Interpreter)
 include(GNUInstallDirs)
 enable_testing()
 
-add_executable(miescat
-    mieleg.F90
-    MIEV0.f
-    RDI1MACHmodule.F90
-    ErrPack.f
+if (NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
+endif()
+
+add_subdirectory(miev)
+
+add_custom_target(python_package
+    COMMAND ${Python_EXECUTABLE} -m pip wheel ${CMAKE_SOURCE_DIR} -w ${CMAKE_BINARY_DIR}/dist
+    DEPENDS miescat
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Build Python wheel package via setuptools"
 )
 
-set_target_properties(miescat PROPERTIES
-  Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/modules"
-)
-target_compile_definitions(miescat PRIVATE
-    $<$<CONFIG:Release>:NDEBUG>
-)
-
-install(TARGETS miescat
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/mieleg.py
+install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/scripts/mieleg.py
     DESTINATION ${CMAKE_INSTALL_BINDIR}
     RENAME mieleg
 )
 
-add_test(NAME test_mie
-    COMMAND miescat 1.3484 0.001 1.0 0.41
-)
 add_test(NAME test_mie_py
-    COMMAND Python::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/mieleg.py
-       --executable ${CMAKE_CURRENT_BINARY_DIR}/miescat
+    COMMAND Python::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/scripts/mieleg.py
+       --executable ${CMAKE_CURRENT_BINARY_DIR}/miev/miescat
        --m_real 1.3484 --m_img 0.001 --radius 1.0 --wavelength 0.41
 )

@@ -1,0 +1,6 @@
+include CMakeLists.txt
+recursive-include miev *
+include setup.py
+include pyproject.toml
+include README.md
+include COPYING
