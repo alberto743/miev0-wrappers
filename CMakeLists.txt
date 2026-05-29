@@ -15,6 +15,21 @@ endif()
 
 add_subdirectory(miev)
 
+if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
+    if(WIN32)
+        target_link_options(miescat PRIVATE
+            "-Wl,-Bstatic"
+            -static-libgfortran
+            -static-libgcc
+            -static-libquadmath
+            "-lwinpthread"
+            "-Wl,-Bdynamic"
+        )
+    else()
+        target_link_options(miescat PRIVATE -static-libgfortran)
+    endif()
+endif()
+
 add_custom_target(python_package
     COMMAND ${Python_EXECUTABLE} -m pip wheel ${CMAKE_SOURCE_DIR} -w ${CMAKE_BINARY_DIR}/dist
     DEPENDS miescat

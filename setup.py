@@ -25,7 +25,7 @@ class CMakeBuild(_build_py):
 
         cmake_args = ["cmake", str(here), "-DCMAKE_BUILD_TYPE=Release"]
 
-        # On Windows, use MinGW Makefiles generator
+        # On Windows, enforce MinGW Makefiles generator
         if os.name == "nt":
             cmake_args.append('-G')
             cmake_args.append('MinGW Makefiles')

@@ -2,17 +2,19 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-name: Build package and publish to PyPI if is a tag
+name: Build/test package and publish to PyPI if is a tag
 
 on:
   push:
     tags:
       - 'v*.*.*'
+    branches:
+      - develop
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build distribution
+    name: Build, test, and package
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -28,7 +30,7 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Set up Fortran (Linux/macOS)
+      - name: Set up Fortran toolchain (Linux/macOS)
         if: runner.os != 'Windows'
         uses: fortran-lang/setup-fortran@v1
         with:
@@ -38,12 +40,15 @@ jobs:
         if: runner.os == 'Windows'
         uses: msys2/setup-msys2@v2
         with:
-          msystem: mingw64
-          install: mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-cmake
+          msystem: UCRT64
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-gcc-fortran
+            mingw-w64-x86_64-cmake
           path-type: inherit
 
-      - name: Set up CMake (Linux)
-        if: runner.os == 'Linux'
+      - name: Set up CMake (Linux/Windows)
+        if: runner.os != 'macOS'
         uses: jwlawson/actions-setup-cmake@v2
         with:
           cmake-version: '3.31.6'
@@ -52,33 +57,32 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install cmake
 
-      - name: Set up CMake (Windows)
-        if: runner.os == 'Windows'
-        uses: jwlawson/actions-setup-cmake@v2
-        with:
-          cmake-version: '3.31.6'
-
-      - name: Install build tooling (Linux/macOS)
-        if: runner.os != 'Windows'
+      - name: Install Python build tooling
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install --user build wheel
 
-      - name: Install build tooling (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install --user build wheel
-
-      - name: Build a binary wheel and a source tarball (Linux/macOS)
+      - name: Run CTest (Linux/macOS)
         if: runner.os != 'Windows'
+        run: |
+          mkdir -p build
+          cmake -S . -B build
+          cmake --build build
+          ctest --test-dir build --output-on-failure
+
+      - name: Run CTest (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          mkdir -p build
+          cmake -S . -B build -G "MinGW Makefiles"
+          cmake --build build
+          ctest --test-dir build --output-on-failure
+
+      - name: Build Python package
         run: python3 -m build
 
-      - name: Build a binary wheel and a source tarball (Windows)
-        if: runner.os == 'Windows'
-        run: python -m build
-
-      - name: Store the distribution packages
+      - name: Store distribution packages
         uses: actions/upload-artifact@v6
         with:
           name: python-package-distributions-${{ matrix.os }}
@@ -86,7 +90,7 @@ jobs:
 
   publish-to-pypi:
     name: Publish Python distribution to PyPI
-    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
+    if: startsWith(github.ref, 'refs/tags/')
     needs:
       - build
     runs-on: ubuntu-latest
