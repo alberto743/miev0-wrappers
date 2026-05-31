@@ -43,6 +43,8 @@ jobs:
           msystem: UCRT64
           install: >-
             mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-gcc-libs
+            mingw-w64-x86_64-winpthreads
             mingw-w64-x86_64-gcc-fortran
             mingw-w64-x86_64-cmake
           path-type: inherit

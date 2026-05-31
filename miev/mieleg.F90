@@ -76,7 +76,7 @@ real(kind=real64) :: fnorm    ! Wiscombe normalization factor for Legendre momen
 ! read command line arguments
 num_args = command_argument_count()
 if (num_args /= 4) then
-    write(*, *) "Usage: mieleg <mr> <mi> <rad> <lam>"
+    write(*, *) "Usage: miescat <mr> <mi> <rad> <lam>"
     stop 1
 end if
 
