@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import os
-import pathlib
+from pathlib import Path
 import shutil
 import subprocess
 from setuptools import setup
 from setuptools.command.build_py import build_py as _build_py
 
 
-here = pathlib.Path(__file__).resolve().parent
+here = Path(__file__).resolve().parent
 
 
 class CMakeBuild(_build_py):
@@ -20,10 +20,10 @@ class CMakeBuild(_build_py):
 
     def build_cmake(self):
         build_command = self.get_finalized_command("build")
-        build_temp = pathlib.Path(build_command.build_temp)
+        build_temp = Path(build_command.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
 
-        cmake_args = ["cmake", str(here), "-DCMAKE_BUILD_TYPE=Release"]
+        cmake_args = ["cmake", str(here)]
 
         # On Windows, enforce MinGW Makefiles generator
         if os.name == "nt":
@@ -40,7 +40,7 @@ class CMakeBuild(_build_py):
         if not built_exe.exists():
             raise FileNotFoundError(f"Could not find built executable: {built_exe}")
 
-        target_dir = pathlib.Path(self.build_lib) / "miescat"
+        target_dir = Path(self.build_lib) / "miescat"
         target_dir.mkdir(parents=True, exist_ok=True)
         shutil.copy2(built_exe, target_dir / exe_name)
 

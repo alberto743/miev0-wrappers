@@ -3,7 +3,7 @@
 ! SPDX-License-Identifier: MPL-2.0
 
 ! Compute Mie scattering properties for a single sphere using the MIEV0 code.
-program mieleg
+program miescat
 use iso_fortran_env, only: real64
 implicit none(type, external)
 
@@ -114,7 +114,7 @@ if (errstat /= 0) then
 end if
 lam = real(arg_real)
 
-! set values for MIEV0 calculation
+! set computation flags for MIEV0 calculation
 #ifndef NDEBUG
 prnt = [.false., .true.]
 #else
@@ -126,18 +126,22 @@ mimcut = 1.e-6
 ipolzn = 0
 numang = 1000001
 
+! size parameter for Mie calculation, computed in double precision to avoid precision loss
 xx_dp = two_pi * real(rad, kind=real64) / real(lam, kind=real64)
 
+! compute step size for angles and number of Legendre moments to compute based on Wiscombe's criteria
 step = 2 / (numang - 1)
 nmom = int(2 * (xx_dp + 4 * xx_dp**one_third + 2))
 xx = real(xx_dp)
 momdim = nmom + 1
 
+! allocate arrays for MIEV0 calculation
 allocate(xmu(numang))
 allocate(s1(numang))
 allocate(s2(numang))
 allocate(pmom(0:momdim, 1))
 
+! compute cosine of angles for scattering amplitude functions
 do n = 1, numang
    xmu(n) = real(1 - (n - 1)*step)
 end do
@@ -147,7 +151,6 @@ call MIEV0(xx, crefin, perfct, mimcut, anyang,       &
            numang, xmu, nmom, ipolzn, momdim, prnt,  &
            qext, qsca, gqsc, pmom, sforw, sback, s1, &
            s2, tforw, tback, spike)
-
 
 ! compute normalization factor for Legendre moments
 fnorm  = 4._real64 / (xx_dp**2 * real(qsca, kind=real64))
@@ -181,4 +184,4 @@ deallocate(s1)
 deallocate(s2)
 deallocate(pmom)
 
-end program mieleg
+end program miescat
