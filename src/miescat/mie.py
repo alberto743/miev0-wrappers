@@ -54,7 +54,7 @@ class Mie:
 
     @property
     def refractive_index(self):
-        return complex(self._m_real, self._m_img)
+        return complex(self._m_real, -self._m_img)
 
     @property
     def size_parameter(self):
